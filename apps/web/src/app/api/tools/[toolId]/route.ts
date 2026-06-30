@@ -1,0 +1,128 @@
+import { NextResponse } from "next/server";
+import { getToolById, downloadsEnabled } from "@omnikit/shared";
+import { saveUpload, getMaxFileSizeBytes } from "@/lib/storage";
+import { SYNC_HANDLERS, type SyncInput } from "@/lib/tools/registry";
+import { createJob } from "@/lib/jobs";
+
+export const runtime = "nodejs";
+export const maxDuration = 60;
+
+function sanitizeName(name: string): string {
+  return name.replace(/[^a-zA-Z0-9._-]/g, "_");
+}
+
+async function handleSyncTool(formData: FormData, toolId: string) {
+  const handler = SYNC_HANDLERS[toolId];
+  if (!handler) {
+    return NextResponse.json({ error: "This tool runs in your browser." }, { status: 400 });
+  }
+
+  const maxSize = getMaxFileSizeBytes();
+  const files: Buffer[] = [];
+  const filenames: string[] = [];
+  const fields: Record<string, string> = {};
+
+  for (const [key, value] of formData.entries()) {
+    if (value instanceof File) {
+      if (value.size === 0) continue;
+      if (value.size > maxSize) {
+        return NextResponse.json(
+          { error: `"${value.name}" is too large (max ${Math.round(maxSize / 1024 / 1024)} MB).` },
+          { status: 413 },
+        );
+      }
+      files.push(Buffer.from(await value.arrayBuffer()));
+      filenames.push(sanitizeName(value.name));
+    } else {
+      fields[key] = String(value);
+    }
+  }
+
+  const input: SyncInput = { files, filenames, fields };
+
+  try {
+    const result = await handler(input);
+    const bytes = result.kind === "text" ? Buffer.from(result.text ?? "", "utf8") : result.buffer!;
+    return new NextResponse(new Uint8Array(bytes), {
+      headers: {
+        "Content-Type": result.mimeType,
+        "Content-Disposition": `attachment; filename="${result.filename}"`,
+        "Content-Length": String(bytes.length),
+        "X-Result-Filename": encodeURIComponent(result.filename),
+        "X-Result-Kind": result.kind,
+        "Cache-Control": "no-store",
+      },
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Processing failed";
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
+}
+
+async function handleAsyncTool(formData: FormData, toolId: string) {
+  const tool = getToolById(toolId);
+  if (!tool || tool.mode !== "async" || tool.comingSoon) {
+    return NextResponse.json({ error: "Tool not found or unavailable" }, { status: 404 });
+  }
+  if (tool.selfHostOnly && !downloadsEnabled()) {
+    return NextResponse.json(
+      { error: "Downloaders require the self-hosted worker and are disabled on this deployment." },
+      { status: 503 },
+    );
+  }
+
+  const payload: Record<string, unknown> = {};
+  for (const input of tool.inputs) {
+    if (input.type === "file") {
+      const file = formData.get(input.id);
+      if (file instanceof File && file.size > 0) {
+        payload[input.id] = await saveUpload(file, toolId);
+      }
+    } else {
+      const value = formData.get(input.id);
+      if (value !== null && value !== "") payload[input.id] = value;
+    }
+  }
+
+  if (toolId === "bg-remove" && !payload.file) {
+    return NextResponse.json({ error: "Image file is required" }, { status: 400 });
+  }
+  const VIDEO_TOOL_IDS = ["video-download", "youtube-download", "instagram-download", "tiktok-download", "twitter-download", "mp3-download"];
+  if ((VIDEO_TOOL_IDS.includes(toolId) || toolId === "spotify-download") && !payload.url) {
+    return NextResponse.json({ error: "A URL is required" }, { status: 400 });
+  }
+
+  // mp3-download always outputs MP3 regardless of what the payload says.
+  if (toolId === "mp3-download") payload.format = "mp3";
+
+  // All video/social downloaders route to the video-download worker handler (yt-dlp handles all platforms).
+  const VIDEO_RESOLVER: Record<string, string> = {
+    "youtube-download":   "video-download",
+    "instagram-download": "video-download",
+    "tiktok-download":    "video-download",
+    "twitter-download":   "video-download",
+    "mp3-download":       "video-download",
+  };
+  try {
+    const resolvedToolId = VIDEO_RESOLVER[toolId] ?? toolId;
+    const job = await createJob(resolvedToolId, payload);
+    return NextResponse.json({ job });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to create job";
+    return NextResponse.json({ error: message }, { status: 429 });
+  }
+}
+
+export async function POST(request: Request, context: { params: Promise<{ toolId: string }> }) {
+  const { toolId } = await context.params;
+  const tool = getToolById(toolId);
+  if (!tool || tool.comingSoon) {
+    return NextResponse.json({ error: "Tool not found" }, { status: 404 });
+  }
+  if (tool.selfHostOnly && !downloadsEnabled()) {
+    return NextResponse.json({ error: "Tool unavailable on this deployment" }, { status: 503 });
+  }
+
+  const formData = await request.formData();
+  return tool.mode === "sync" ? handleSyncTool(formData, toolId) : handleAsyncTool(formData, toolId);
+}

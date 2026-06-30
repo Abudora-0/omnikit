@@ -1,0 +1,12 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "corepack enable && pnpm --filter @omnikit/web build",
+  "installCommand": "corepack enable && pnpm install --frozen-lockfile",
+  "outputDirectory": "apps/web/.next",
+  "framework": "nextjs",
+  "functions": {
+    "apps/web/src/app/api/tools/[toolId]/route.ts": {
+      "maxDuration": 60
+    }
+  }
+}

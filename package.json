@@ -1,0 +1,16 @@
+{
+  "name": "omnikit",
+  "private": true,
+  "packageManager": "pnpm@9.15.4",
+  "scripts": {
+    "dev": "pnpm --filter @omnikit/web dev",
+    "build": "pnpm --filter @omnikit/web build",
+    "start": "pnpm --filter @omnikit/web start",
+    "lint": "pnpm --filter @omnikit/web lint",
+    "worker": "python services/worker/worker.py",
+    "cleanup": "curl -X POST http://localhost:3000/api/cleanup"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}

@@ -1,0 +1,25 @@
+node_modules/
+.next/
+dist/
+build/
+.env
+.env.local
+**/.env
+**/.env.local
+*.pyc
+__pycache__/
+.venv/
+venv/
+/data/
+*.log
+.DS_Store
+*.tsbuildinfo
+
+# Claude Code session memory — personal notes, not project code
+.claude/
+
+# Generated at predev/prebuild by scripts/copy-pdf-worker.mjs
+apps/web/public/pdf.worker.min.mjs
+
+# Browser cookies export — never commit
+services/worker/cookies.txt

@@ -1,0 +1,345 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ────────────────────────────────────────────────────────────────────────
+   OmniKit — "Sleek Dark Pro" design system
+   Linear / Vercel / Raycast-inspired: near-black canvas, indigo→violet→cyan
+   brand gradient, fine gradient borders, cursor spotlight, smooth springs.
+   ──────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --background: 240 10% 3.5%;
+  --foreground: 240 12% 96%;
+  --card: 240 9% 6.5%;
+  --card-foreground: 240 12% 96%;
+  --popover: 240 10% 5%;
+  --popover-foreground: 240 12% 96%;
+  --primary: 252 88% 67%;
+  --primary-foreground: 240 14% 99%;
+  --secondary: 240 8% 12%;
+  --secondary-foreground: 240 12% 96%;
+  --muted: 240 8% 11%;
+  --muted-foreground: 240 6% 60%;
+  --accent: 252 50% 16%;
+  --accent-foreground: 252 90% 84%;
+  --destructive: 356 80% 62%;
+  --success: 158 72% 47%;
+  --border: 240 7% 15%;
+  --input: 240 7% 16%;
+  --ring: 252 88% 67%;
+  --radius: 0.7rem;
+
+  /* Render native controls (select option popups, scrollbars, date pickers)
+     in dark mode so they match the theme instead of defaulting to white. */
+  color-scheme: dark;
+
+  /* Brand gradient stops (indigo → violet → cyan) */
+  --brand-1: 252 90% 68%;
+  --brand-2: 286 84% 66%;
+  --brand-3: 198 92% 58%;
+}
+
+/* Belt-and-suspenders for the native <select> dropdown list: some browsers
+   ignore color-scheme for option backgrounds, so set them explicitly. */
+select option,
+select optgroup {
+  background-color: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  min-height: 100vh;
+  font-family: var(--font-sans), "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-feature-settings: "ss01", "cv01", "cv02";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Ambient aurora: slow-drifting brand glows fixed behind everything.
+   Uses only transform (GPU-composited) — no blur filter — to stay cheap. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -25%;
+  z-index: -2;
+  pointer-events: none;
+  will-change: transform;
+  background:
+    radial-gradient(38rem 38rem at 12% -8%, hsl(var(--brand-1) / 0.18), transparent 62%),
+    radial-gradient(34rem 34rem at 90% 0%, hsl(var(--brand-2) / 0.14), transparent 62%),
+    radial-gradient(40rem 40rem at 78% 108%, hsl(var(--brand-3) / 0.12), transparent 62%);
+  animation: aurora-drift 30s ease-in-out infinite alternate;
+}
+
+/* Fine film-grain noise overlay for depth (very subtle) */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ── Typography helpers ─────────────────────────────────────────────────── */
+.font-mono-accent {
+  font-family: var(--font-mono), ui-monospace, "JetBrains Mono", "Cascadia Code", monospace;
+  letter-spacing: -0.01em;
+  font-feature-settings: "ss01";
+}
+
+/* Animated brand-gradient text */
+.text-gradient {
+  background: linear-gradient(
+    100deg,
+    hsl(var(--brand-1)),
+    hsl(var(--brand-2)),
+    hsl(var(--brand-3)),
+    hsl(var(--brand-1))
+  );
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: gradient-pan 8s linear infinite;
+}
+
+/* ── Category accent variables ──────────────────────────────────────────── */
+.cat-image    { --cat: 198 92% 56%; }
+.cat-pdf      { --cat: 347 86% 62%; }
+.cat-download { --cat: 158 72% 47%; }
+.cat-audio    { --cat: 292 84% 66%; }
+.cat-utility  { --cat: 252 88% 67%; }
+
+/* Category section header strip */
+.cat-section-strip {
+  position: relative;
+  border-radius: calc(var(--radius) - 0.15rem);
+  background: linear-gradient(100deg, hsl(var(--cat) / 0.10) 0%, transparent 62%);
+  border: 1px solid hsl(var(--cat) / 0.18);
+  border-left: 3px solid hsl(var(--cat) / 0.8);
+}
+
+/* ── Gradient hairline border utility (1px, masked) ─────────────────────── */
+.gradient-border {
+  position: relative;
+}
+.gradient-border::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, hsl(var(--border) / 0.9), hsl(var(--border) / 0.2) 40%, hsl(var(--primary) / 0.35));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ── Spotlight card: cursor-following glow + gradient ring ───────────────── */
+.spotlight-card {
+  position: relative;
+  isolation: isolate;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.28s ease,
+    box-shadow 0.28s ease;
+  will-change: transform;
+}
+/* Inner radial wash that tracks the pointer (--mx / --my set in JS) */
+.spotlight-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  background: radial-gradient(
+    420px circle at var(--mx, 50%) var(--my, 50%),
+    hsl(var(--cat, var(--primary)) / 0.14),
+    transparent 60%
+  );
+  pointer-events: none;
+}
+/* Glowing gradient ring that tracks the pointer */
+.spotlight-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  background: radial-gradient(
+    320px circle at var(--mx, 50%) var(--my, 50%),
+    hsl(var(--cat, var(--primary)) / 0.75),
+    transparent 62%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+.spotlight-card:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 1px 0 0 hsl(var(--foreground) / 0.04) inset,
+    0 18px 40px -20px hsl(var(--cat, var(--primary)) / 0.45);
+}
+.spotlight-card:hover::before,
+.spotlight-card:hover::after {
+  opacity: 1;
+}
+
+/* Legacy alias kept for any component still using it */
+.tool-card-hover {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+.tool-card-hover:hover {
+  border-color: hsl(var(--cat, var(--primary)) / 0.5);
+  transform: translateY(-3px);
+  box-shadow: 0 16px 36px -18px hsl(var(--cat, var(--primary)) / 0.4);
+}
+
+/* ── Glass surface ──────────────────────────────────────────────────────── */
+.glass {
+  background: hsl(var(--card) / 0.7);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+}
+
+/* ── Shimmer (loading) ──────────────────────────────────────────────────── */
+.shimmer {
+  background: linear-gradient(
+    100deg,
+    hsl(var(--secondary)) 30%,
+    hsl(var(--primary) / 0.22) 50%,
+    hsl(var(--secondary)) 70%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+/* Sheen sweep used on primary buttons */
+.sheen {
+  position: relative;
+  overflow: hidden;
+}
+.sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    hsl(0 0% 100% / 0.18) 50%,
+    transparent 80%
+  );
+  transform: translateX(-120%);
+  transition: transform 0.6s ease;
+}
+.sheen:hover::after {
+  transform: translateX(120%);
+}
+
+/* ── Animated dot grid (hero accent) ────────────────────────────────────── */
+.dot-grid {
+  background-image: radial-gradient(hsl(var(--foreground) / 0.18) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: radial-gradient(60% 60% at 50% 40%, #000 30%, transparent 100%);
+  -webkit-mask-image: radial-gradient(60% 60% at 50% 40%, #000 30%, transparent 100%);
+}
+
+.grid-pan {
+  background-image:
+    linear-gradient(hsl(var(--primary) / 0.5) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--primary) / 0.5) 1px, transparent 1px);
+  background-size: 28px 28px;
+  animation: grid-pan 22s linear infinite;
+}
+
+/* ── Custom scrollbar ───────────────────────────────────────────────────── */
+.thin-scroll::-webkit-scrollbar { width: 9px; height: 9px; }
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 999px;
+  border: 2px solid hsl(var(--background));
+}
+.thin-scroll::-webkit-scrollbar-thumb:hover { background: hsl(var(--primary) / 0.6); }
+
+/* ── Keyframes ──────────────────────────────────────────────────────────── */
+@keyframes aurora-drift {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(2%, 1.5%, 0) scale(1.06); }
+  100% { transform: translate3d(-1.5%, -1%, 0) scale(1.02); }
+}
+@keyframes gradient-pan {
+  to { background-position: 220% center; }
+}
+@keyframes grid-pan {
+  from { background-position: 0 0; }
+  to { background-position: 28px 28px; }
+}
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes float-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.45); }
+  50% { box-shadow: 0 0 0 7px hsl(var(--primary) / 0); }
+}
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+@keyframes pop-in {
+  0% { opacity: 0; transform: scale(0.92); }
+  60% { transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in-up { animation: fade-in-up 0.5s ease both; }
+.animate-float-in { animation: float-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-count-up { animation: count-up 0.5s ease both; }
+.animate-pulse-glow { animation: pulse-glow 1.8s ease-in-out infinite; }
+.animate-pop-in { animation: pop-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-spin-slow { animation: spin-slow 8s linear infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  body::before,
+  .grid-pan, .shimmer, .text-gradient,
+  .animate-fade-in-up, .animate-float-in, .animate-count-up,
+  .animate-pulse-glow, .animate-pop-in, .animate-spin-slow {
+    animation: none !important;
+  }
+  .spotlight-card:hover,
+  .tool-card-hover:hover { transform: none; }
+}
