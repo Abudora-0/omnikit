@@ -42,8 +42,12 @@ services:
       STORAGE_DIR: /data/storage
       MAX_CONCURRENT_JOBS: 2
       JOB_TTL_HOURS: 24
+      # Set on the host (or in a .env next to this file) to authenticate
+      # yt-dlp for login-gated content / cloud-IP verification checks.
+      COOKIES_FILE: "${COOKIES_FILE:-}"
     volumes:
       - storage_data:/data/storage
+      - ./services/worker/cookies.txt:/app/cookies.txt:ro
     depends_on:
       - redis
 
