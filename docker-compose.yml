@@ -47,7 +47,8 @@ services:
       COOKIES_FILE: "${COOKIES_FILE:-}"
     volumes:
       - storage_data:/data/storage
-      - ./services/worker/cookies.txt:/app/cookies.txt:ro
+      # Not read-only: yt-dlp rewrites the file to persist refreshed session cookies.
+      - ./services/worker/cookies.txt:/app/cookies.txt
     depends_on:
       - redis
 
