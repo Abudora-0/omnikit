@@ -6,7 +6,13 @@ ENV PYTHONUNBUFFERED=1
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     curl \
+    unzip \
     && rm -rf /var/lib/apt/lists/*
+
+# yt-dlp needs a JS runtime to solve YouTube's "n" challenge (anti-bot token);
+# without it, only storyboard/thumbnail formats are returned, no real video/audio.
+ENV DENO_INSTALL=/usr/local
+RUN curl -fsSL https://deno.land/install.sh | sh
 
 WORKDIR /app
 
