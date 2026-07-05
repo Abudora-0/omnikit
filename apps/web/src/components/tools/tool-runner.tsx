@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { getToolById } from "@omnikit/shared";
 import type { Job } from "@omnikit/shared";
 import { Download, Loader2, Check, Copy, Play } from "lucide-react";
@@ -517,11 +518,11 @@ function ToolShell({ tool, children }: { tool: NonNullable<ReturnType<typeof get
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 font-mono-accent text-[10px] uppercase tracking-widest text-muted-foreground">
-        <a href="/" className="hover:text-foreground transition-colors">Home</a>
+        <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
         <span>/</span>
-        <a href={`/#${tool.category}`} className={cn("hover:text-foreground transition-colors", textColor)}>
+        <Link href={`/#${tool.category}`} className={cn("hover:text-foreground transition-colors", textColor)}>
           {CATEGORY_LABELS_LOCAL[tool.category] ?? tool.category}
-        </a>
+        </Link>
         <span>/</span>
         <span className="text-foreground/70">{tool.name}</span>
       </nav>

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getToolById, downloadsEnabled } from "@omnikit/shared";
+import { getToolById, downloadsEnabled, heavyWorkerToolsEnabled } from "@omnikit/shared";
 import { saveUpload, getMaxFileSizeBytes } from "@/lib/storage";
 import { SYNC_HANDLERS, type SyncInput } from "@/lib/tools/registry";
 import { createJob } from "@/lib/jobs";
@@ -70,6 +70,12 @@ async function handleAsyncTool(formData: FormData, toolId: string) {
       { status: 503 },
     );
   }
+  if (tool.heavyWorkerOnly && !heavyWorkerToolsEnabled()) {
+    return NextResponse.json(
+      { error: "This tool is disabled on this deployment (requires more memory)." },
+      { status: 503 },
+    );
+  }
 
   const payload: Record<string, unknown> = {};
   for (const input of tool.inputs) {
@@ -120,6 +126,9 @@ export async function POST(request: Request, context: { params: Promise<{ toolId
     return NextResponse.json({ error: "Tool not found" }, { status: 404 });
   }
   if (tool.selfHostOnly && !downloadsEnabled()) {
+    return NextResponse.json({ error: "Tool unavailable on this deployment" }, { status: 503 });
+  }
+  if (tool.heavyWorkerOnly && !heavyWorkerToolsEnabled()) {
     return NextResponse.json({ error: "Tool unavailable on this deployment" }, { status: 503 });
   }
 

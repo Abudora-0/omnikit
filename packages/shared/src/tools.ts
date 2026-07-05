@@ -235,6 +235,7 @@ export const TOOLS: OmniTool[] = [
     mode: "async",
     icon: "Wand2",
     selfHostOnly: true,
+    heavyWorkerOnly: true,
     inputs: [
       { id: "file", type: "file", label: "Image file", required: true },
       {
@@ -820,7 +821,22 @@ export function downloadsEnabled(): boolean {
   return process.env.NEXT_PUBLIC_ENABLE_DOWNLOADS === "1";
 }
 
+/**
+ * bg-remove's worker path loads an ONNX model into memory (~200-400MB) — too
+ * much for a 1GB free-tier VPS. Defaults to enabled; set to "0" to hide it on
+ * low-RAM self-host deployments (the client-side bg-remove-client still works
+ * everywhere, since it runs in the browser).
+ */
+export function heavyWorkerToolsEnabled(): boolean {
+  return process.env.NEXT_PUBLIC_ENABLE_HEAVY_WORKER_TOOLS !== "0";
+}
+
 export function getAvailableTools(): OmniTool[] {
-  const enabled = downloadsEnabled();
-  return TOOLS.filter((tool) => enabled || !tool.selfHostOnly);
+  const downloads = downloadsEnabled();
+  const heavy = heavyWorkerToolsEnabled();
+  return TOOLS.filter((tool) => {
+    if (tool.selfHostOnly && !downloads) return false;
+    if (tool.heavyWorkerOnly && !heavy) return false;
+    return true;
+  });
 }

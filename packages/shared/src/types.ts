@@ -51,6 +51,8 @@ export const OmniToolSchema = z.object({
   comingSoon: z.boolean().optional(),
   /** Async tools that require the self-hosted Python worker; hidden on Vercel. */
   selfHostOnly: z.boolean().optional(),
+  /** Memory-hungry worker tools (e.g. rembg AI models); hidden on low-RAM self-host deployments. */
+  heavyWorkerOnly: z.boolean().optional(),
   /** Runs entirely in the browser (no API round-trip), e.g. pdf-to-images. */
   clientSide: z.boolean().optional(),
   /** Short tagline shown on the tool card / runner header. */

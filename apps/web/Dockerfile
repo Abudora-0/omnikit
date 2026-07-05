@@ -18,6 +18,10 @@ COPY . .
 # present here for the docker (self-hosted) build to enable the worker tools.
 ARG NEXT_PUBLIC_ENABLE_DOWNLOADS=1
 ENV NEXT_PUBLIC_ENABLE_DOWNLOADS=$NEXT_PUBLIC_ENABLE_DOWNLOADS
+# Set to "0" on low-RAM self-host deployments (e.g. 1GB free-tier VPS) to hide
+# the worker-side bg-remove tool, which loads an ONNX model into memory.
+ARG NEXT_PUBLIC_ENABLE_HEAVY_WORKER_TOOLS=1
+ENV NEXT_PUBLIC_ENABLE_HEAVY_WORKER_TOOLS=$NEXT_PUBLIC_ENABLE_HEAVY_WORKER_TOOLS
 # Emit .next/standalone for the runner stage below.
 ENV NEXT_OUTPUT_STANDALONE=1
 RUN pnpm --filter @omnikit/web build

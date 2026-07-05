@@ -12,10 +12,13 @@ services:
       dockerfile: apps/web/Dockerfile
       args:
         NEXT_PUBLIC_ENABLE_DOWNLOADS: "1"
+        # Set to "0" on low-RAM hosts (e.g. a 1GB free-tier VPS) to hide bg-remove.
+        NEXT_PUBLIC_ENABLE_HEAVY_WORKER_TOOLS: "${NEXT_PUBLIC_ENABLE_HEAVY_WORKER_TOOLS:-1}"
     ports:
       - "3000:3000"
     environment:
       NEXT_PUBLIC_ENABLE_DOWNLOADS: "1"
+      NEXT_PUBLIC_ENABLE_HEAVY_WORKER_TOOLS: "${NEXT_PUBLIC_ENABLE_HEAVY_WORKER_TOOLS:-1}"
       REDIS_URL: redis://redis:6379/0
       STORAGE_PATH: /data/storage
       MAX_FILE_SIZE_MB: 100
