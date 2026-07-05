@@ -1,12 +1,14 @@
 services:
   redis:
     image: redis:7-alpine
+    restart: unless-stopped
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
 
   web:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: apps/web/Dockerfile
@@ -31,6 +33,7 @@ services:
       - redis
 
   worker:
+    restart: unless-stopped
     build:
       context: ./services/worker
       dockerfile: Dockerfile

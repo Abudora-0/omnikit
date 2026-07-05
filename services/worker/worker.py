@@ -1,6 +1,7 @@
 import logging
 import os
 import tempfile
+import time
 
 # numba (pulled in by rembg → pymatting) caches compiled functions to disk. On Microsoft
 # Store Python it cannot write into site-packages/__pycache__, which crashes the import.
@@ -48,7 +49,12 @@ def main() -> None:
                        "Install it (winget install Gyan.FFmpeg) and restart the worker.")
 
     while True:
-        job = dequeue_file_job() if use_file else dequeue_job(timeout=5)
+        try:
+            job = dequeue_file_job() if use_file else dequeue_job(timeout=5)
+        except Exception:  # noqa: BLE001
+            logger.exception("Queue read failed, retrying in 2s")
+            time.sleep(2)
+            continue
         if not job:
             continue
 
