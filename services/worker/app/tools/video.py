@@ -1,7 +1,9 @@
 import os
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import Callable, Optional
 
@@ -22,11 +24,16 @@ def _auth_args() -> list[str]:
           directly from that browser's profile.
 
     A valid cookies file takes precedence, so a leftover browser setting won't
-    override an explicit export.
+    override an explicit export. yt-dlp rewrites the cookies file after each run
+    to persist refreshed session tokens, but that rewrite can silently drop
+    cookies for domains/flags it doesn't fully recognize, degrading the session
+    over repeated runs. So we hand it a disposable copy instead of the master file.
     """
     cookies_file = settings.cookies_file.strip()
     if cookies_file and os.path.isfile(cookies_file):
-        return ["--cookies", cookies_file]
+        scratch = os.path.join(tempfile.gettempdir(), f"omnikit-cookies-{os.getpid()}.txt")
+        shutil.copyfile(cookies_file, scratch)
+        return ["--cookies", scratch]
     browser = settings.cookies_from_browser.strip()
     if browser:
         return ["--cookies-from-browser", browser]
