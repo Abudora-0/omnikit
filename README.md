@@ -15,6 +15,8 @@
 
 [Live demo](https://web-eight-eta-40.vercel.app) · [Report a bug](https://github.com/Abudora-0/omnikit/issues)
 
+*A full self-hosted deployment (all 43 tools, including downloaders) also runs on a personal VPS — not publicly linked here, but the setup below reproduces it exactly.*
+
 </div>
 
 ---
@@ -111,6 +113,38 @@ Some platforms — most notably YouTube (bot/sign-in checks), Instagram (Reels/S
 - YouTube in particular rotates session cookies automatically as a security measure, so exported cookies can stop working after a while — if downloads start failing again with a "sign in to confirm you're not a bot" error, just re-export and redeploy `cookies.txt`.
 - yt-dlp needs a JS runtime (Deno, bundled in the Docker image) to solve YouTube's anti-bot "n challenge" — without it, only thumbnail/storyboard formats are returned.
 - `COOKIES_FROM_BROWSER=<browser>` is also supported as an alternative to a cookies file, but only works when the worker runs on the same machine as that browser (not viable on a headless VPS).
+
+### Refreshing cookies (when downloads start failing again)
+
+This is a normal, recurring maintenance step — not a bug. Do this whenever a downloader that used to work suddenly fails with a sign-in/bot-check error.
+
+**1. Re-export a fresh `cookies.txt`**
+- Open your browser and make sure you're logged into the platform(s) you need (YouTube, Instagram, X, Reddit, etc.)
+- Run your cookie-export extension's **"Export All Cookies"** option (not "current site only") so every domain lands in one file
+- Save it, replacing the old file
+
+**2. Deploy the fresh file to the worker**
+
+*Local Docker Compose:*
+```bash
+cp path\to\new\cookies.txt services\worker\cookies.txt
+docker compose restart worker
+```
+
+*Remote VPS (from your local machine):*
+```powershell
+scp -i "path\to\your-ssh-key" "path\to\new\cookies.txt" user@your-vps-ip:~/omnikit/services/worker/cookies.txt
+```
+then on the VPS:
+```bash
+docker compose restart worker
+```
+
+**3. Verify it worked**
+```bash
+docker exec omnikit-worker-1 python -m yt_dlp --cookies /app/cookies.txt --list-formats "https://www.youtube.com/watch?v=<any-video-id>"
+```
+If it lists real video/audio formats (not just `sb0`–`sb3` storyboard entries), the session is valid — retry the download from the UI.
 
 ### Legal disclaimer
 
